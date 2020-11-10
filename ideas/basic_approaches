@@ -1,0 +1,23 @@
+approach 1: Start with trivial solution, merge as long as it improves
+  eg
+    create route where santa goes from north pole, to point, to north pole
+    iterate until no change
+      find the two points that are closest to each other and not on the same route and not flagged as already seen
+      try to merge their two routes and see if that improves the combined cost
+      if yes, merge, if no, flag as seen
+
+
+approach 2: Assume that better solutions have the sled be as full as possible
+  eg
+    do some kind of weird kmeans variant, but where the # of points allocated to a centroid are capped by sled capacity, until world is divided into clusters that have at max sled capacity
+    for each cluster:
+      create route in descending order of weight. Do brute-force TSP if weights are equal (n should be low enough?)
+
+  eg
+    do some kind of weird kmeans variant, but where the # of points allocated to a centroid are capped by sled capacity, until world is divided into clusters that have at max sled capacity
+    for each cluster:
+      create route in some modified TSP algorithm where the cost matrix changes depending on route chosen
+
+
+approach 3: Don't overthink it and throw it into gurobi
+  problem: representing delivery order will be pretty difficult, but otherwise it's a straightforward if massive ILP
