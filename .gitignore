@@ -1,3 +1,6 @@
+# Data files, we can't share them per kaggle rules afaik
+*.csv
+
 # Compiled class file
 *.class
 
