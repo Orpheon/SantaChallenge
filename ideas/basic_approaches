@@ -21,3 +21,10 @@ approach 2: Assume that better solutions have the sled be as full as possible
 
 approach 3: Don't overthink it and throw it into gurobi
   problem: representing delivery order will be pretty difficult, but otherwise it's a straightforward if massive ILP
+
+approach 4: Assume that in better solutions each path santa takes has minimal change of longitude while heavy (goes straight from north to southpole)
+  eg:
+    Split world in longitude sections each with about one sled load of packages. Optimize each section by also taking packages from adjacent sections into account.
+    Maybe the sled can be filled closer to the maximum then before or another route is better.
+  problem:
+    Is the assumption true? Find a way to optimize in a running time of O(n^2) or less
