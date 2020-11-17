@@ -1,8 +1,10 @@
 package ch.mse.santachallenge;
 
+import ch.mse.santachallenge.abstraction.ITrip;
+
 import java.util.ArrayList;
 
-public class Trip extends ArrayList<Gift> {
+public class Trip extends ArrayList<Gift> implements ITrip {
     private final int id;
 
     public Trip(int id) {
@@ -16,5 +18,9 @@ public class Trip extends ArrayList<Gift> {
 
     public int getId() {
         return id;
+    }
+
+    public Iterable<Gift> getDistributedGifts() {
+        return this;
     }
 }

@@ -1,6 +1,8 @@
 # Data files, we can't share them per kaggle rules afaik
 *.csv
-
+# Generated svg of the solution
+solution.html
+solution.svg
 # Compiled class file
 *.class
 
