@@ -7,7 +7,11 @@ import java.util.ListIterator;
 
 public class Trip extends ArrayList<Gift> implements ITrip {
     private final int id;
+    private static int id_template = 0;
 
+    public Trip() {
+        this.id = id_template++;
+    }
     public Trip(int id) {
         this.id = id;
     }

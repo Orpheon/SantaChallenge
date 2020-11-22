@@ -31,16 +31,15 @@ public class Program {
 
     public static List<ITrip> constructRandomSolution(List<Gift> gifts) {
         List<ITrip> trips = new ArrayList<ITrip>(100);
-        int id_template = 0;
         // Add first trip with id 0
-        trips.add(new Trip(id_template++));
+        trips.add(new Trip());
         for (Gift gift : gifts) {
             // Add each gift to a random trip. If the trip is already full, create a new trip and add the gift there
             ITrip trip = trips.get((int) (Math.random() * trips.size()));
             if (trip.totalWeight() + gift.getWeight() <= Constants.maxWeight) {
                 trip.add(gift);
             } else {
-                Trip newTrip = new Trip(id_template++);
+                Trip newTrip = new Trip();
                 newTrip.add(gift);
                 trips.add(newTrip);
             }
