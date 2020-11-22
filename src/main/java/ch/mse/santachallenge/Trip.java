@@ -30,6 +30,43 @@ public class Trip extends ArrayList<Gift> implements ITrip {
         return totalCost;
     }
 
+    public double costSkipGift(Gift skipGift) {
+        double totalCost = 0.0;
+        double weight = Constants.sledWeight;
+        Location lastLocation = Constants.northPole;
+        ListIterator<Gift> it = listIterator(size());
+        while (it.hasPrevious()) {
+            Gift gift = it.previous();
+            if (gift != skipGift) {
+                totalCost += weight * gift.getLocation().distanceTo(lastLocation);
+                weight += gift.getWeight();
+                lastLocation = gift.getLocation();
+            }
+        }
+        return totalCost;
+    }
+
+    public double costExtraGift(Gift extraGift, int pos) {
+        double totalCost = 0.0;
+        double weight = Constants.sledWeight;
+        Location lastLocation = Constants.northPole;
+        // Apologies for the ugly code
+        for (int idx = size(); idx >= 0; --idx) {
+            if (idx == pos) {
+                totalCost += weight * extraGift.getLocation().distanceTo(lastLocation);
+                weight += extraGift.getWeight();
+                lastLocation = extraGift.getLocation();
+            }
+            if (idx <= size() - 1) {
+                Gift gift = get(idx);
+                totalCost += weight * gift.getLocation().distanceTo(lastLocation);
+                weight += gift.getWeight();
+                lastLocation = gift.getLocation();
+            }
+        }
+        return totalCost;
+    }
+
     public double totalWeight() {
         double weight = Constants.sledWeight;
         for (Gift gift : this) {
