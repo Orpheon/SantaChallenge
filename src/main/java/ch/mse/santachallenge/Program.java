@@ -21,9 +21,23 @@ public class Program {
                 totalCost += trip.cost();
             }
             System.out.println("Total cost of random solution: " + String.valueOf(totalCost));
-
-            new Printer().writeToHtml("solution.html", gifts, trips);
-            System.out.println("abc");
+            new Printer().writeToHtml("random solution.html", gifts, trips);
+            NaiveSimulatedAnnealing optimizer = new NaiveSimulatedAnnealing();
+            int cycleCount = 0;
+            while (true) {
+                trips = optimizer.optimize(trips);
+                totalCost = 0.0;
+                for (ITrip trip : trips) {
+                    totalCost += trip.cost();
+                }
+                System.out.println(
+                        "Cycle " + String.valueOf(cycleCount) +
+                        " cost: " + String.valueOf(totalCost) +
+                        "; n tours: " + String.valueOf(trips.size())
+                );
+                new Printer().writeToHtml("solution"+String.valueOf(cycleCount)+".html", gifts, trips);
+                ++cycleCount;
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
