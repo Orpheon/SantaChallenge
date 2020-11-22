@@ -1,11 +1,9 @@
 package ch.mse.santachallenge;
 
 import ch.mse.santachallenge.abstraction.ITrip;
-import ch.mse.santachallenge.Constants;
 
 import java.util.ArrayList;
 import java.util.ListIterator;
-
 
 public class Trip extends ArrayList<Gift> implements ITrip {
     private final int id;
