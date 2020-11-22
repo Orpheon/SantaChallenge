@@ -12,7 +12,7 @@ public class Trip extends ArrayList<Gift> implements ITrip {
         this.id = id;
     }
 
-    public double cost(){
+    public double cost() {
         double totalCost = 0.0;
         double weight = Constants.sledWeight;
         Location lastLocation = Constants.northPole;
@@ -24,6 +24,14 @@ public class Trip extends ArrayList<Gift> implements ITrip {
             lastLocation = gift.getLocation();
         }
         return totalCost;
+    }
+
+    public double totalWeight() {
+        double weight = Constants.sledWeight;
+        for (Gift gift : this) {
+            weight += gift.getWeight();
+        }
+        return weight;
     }
 
     public int getId() {

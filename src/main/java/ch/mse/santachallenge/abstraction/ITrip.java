@@ -6,4 +6,5 @@ public interface ITrip {
     int getId();
     Iterable<Gift> getDistributedGifts();
     double cost();
+    double totalWeight();
 }
