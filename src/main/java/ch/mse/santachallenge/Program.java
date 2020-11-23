@@ -24,6 +24,7 @@ public class Program {
             new Printer().writeToHtml("random solution.html", gifts, trips);
             NaiveSimulatedAnnealing optimizer = new NaiveSimulatedAnnealing();
             int cycleCount = 0;
+            double bestScoreSoFar = Double.POSITIVE_INFINITY;
             while (true) {
                 trips = optimizer.optimize(trips);
                 totalCost = 0.0;
@@ -34,14 +35,17 @@ public class Program {
                         longestTripLength = trip.size();
                     }
                 }
-                System.out.println(
-                        "Cycle " + cycleCount +
-                        " cost: " + totalCost +
-                        "; n tours: " + trips.size() +
-                        "; mean tour length: " + (gifts.size() / trips.size()) +
-                        "; max tour length: " + longestTripLength
-                );
-                new Printer().writeToHtml("solution"+cycleCount+".html", gifts, trips);
+                if (totalCost < bestScoreSoFar) {
+                    System.out.println(
+                            "Cycle " + cycleCount +
+                                    " cost: " + totalCost +
+                                    "; n tours: " + trips.size() +
+                                    "; mean tour length: " + (gifts.size() / trips.size()) +
+                                    "; max tour length: " + longestTripLength
+                    );
+                    new Printer().writeToHtml("solution"+cycleCount+".html", gifts, trips);
+                    bestScoreSoFar = totalCost;
+                }
                 ++cycleCount;
             }
         } catch (IOException e) {
