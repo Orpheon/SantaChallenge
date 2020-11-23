@@ -10,6 +10,7 @@ public class NaiveSimulatedAnnealing {
     private double minTemperature = 0.0001;
     private double decayFactor = 1.1;
     private int decayDelay = 1000;
+    private double newTripGenerationChance = 0.01;
     
     // Variables that change over time
     private double temperature;
@@ -28,13 +29,17 @@ public class NaiveSimulatedAnnealing {
             Gift gift = srcTrip.get((int) (Math.random() * srcTrip.size()));
             ITrip destTrip = trips.get((int) (Math.random() * trips.size()));
             boolean newDestTrip = false;
-            if (destTrip.totalWeight() + gift.getWeight() > Constants.maxWeight) {
+            if (
+                    destTrip.totalWeight() + gift.getWeight() > Constants.maxWeight ||
+                    Math.random() < newTripGenerationChance
+            ) {
                 // The destination trip is already too heavy, generate a new trip
                 destTrip = new Trip();
                 newDestTrip = true;
             }
-            // + 1 because we could place the gift at the start and at the end, which gives us extra location
-            int pos = (int) (Math.random() * (destTrip.size() + 1));
+            // TODO: Switch between these at some point?
+//            int pos = selectRandomInsertionPosition(destTrip.size());
+            int pos = selectDescendingWeightInsertionPosition(destTrip, gift);
 
             // Check if this improves total cost
             double originalCost = srcTrip.cost() + destTrip.cost();
@@ -70,6 +75,46 @@ public class NaiveSimulatedAnnealing {
         }
     }
 
+    private int selectRandomInsertionPosition(int maxSize) {
+        // + 1 because we could place the gift at the start and at the end, which gives us extra location
+        return (int) (Math.random() * (maxSize + 1));
+    }
+
+    private int selectDescendingWeightInsertionPosition(ITrip trip, Gift newGift) {
+        // Sort destinations of a trip by descending weight
+        trip.sort(
+                // Reversed order because we want descending sort
+                (Gift g1, Gift g2) -> Double.compare(g2.getWeight(), g1.getWeight())
+        );
+        for (int i = 0; i < trip.size(); ++i) {
+            Gift gift = trip.get(i);
+            if (gift.getWeight() < newGift.getWeight()) {
+                // We don't have any other gift with this weight, which means the insertion position has to be here
+                return i;
+            } else if (gift.getWeight() == newGift.getWeight()) {
+                // We're at the start of the range of potential positions
+                // where to insert our gift keeping with descending weights
+                // Select the best one
+                int bestPos = 0;
+                double bestCost = Double.POSITIVE_INFINITY;
+                for (;; ++i) {
+                    // TODO This is very inefficient, but premature optimization root of evil etc
+                    double cost = trip.costExtraGift(gift, i);
+                    if (cost < bestCost) {
+                        bestPos = i;
+                        bestCost = cost;
+                    }
+                    if (i >= trip.size() || trip.get(i).getWeight() != gift.getWeight()) {
+                        break;
+                    }
+                }
+                return bestPos;
+            }
+        }
+        // We can insert our gift at the end
+        return trip.size();
+    }
+
     public void setTemperatureLimits(double minTemperature, double maxTemperature) throws IllegalArgumentException {
         if (maxTemperature < minTemperature) {
             throw new IllegalArgumentException("Minimum temperature is larger than maximum temperature");
@@ -85,6 +130,10 @@ public class NaiveSimulatedAnnealing {
 
         this.decayFactor = decayFactor;
         this.decayDelay = decayDelay;
+    }
+
+    public void setNewTripGenerationChance(double newTripGenerationChance) {
+        this.newTripGenerationChance = newTripGenerationChance;
     }
 
     public void reset() {
