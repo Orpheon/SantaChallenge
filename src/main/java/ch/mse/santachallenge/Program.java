@@ -20,7 +20,7 @@ public class Program {
             for (ITrip trip : trips) {
                 totalCost += trip.cost();
             }
-            System.out.println("Total cost of random solution: " + String.valueOf(totalCost));
+            System.out.println("Total cost of random solution: " + totalCost);
             new Printer().writeToHtml("random solution.html", gifts, trips);
             NaiveSimulatedAnnealing optimizer = new NaiveSimulatedAnnealing();
             int cycleCount = 0;
@@ -35,13 +35,13 @@ public class Program {
                     }
                 }
                 System.out.println(
-                        "Cycle " + String.valueOf(cycleCount) +
-                        " cost: " + String.valueOf(totalCost) +
-                        "; n tours: " + String.valueOf(trips.size()) +
-                        "; mean tour length: " + String.valueOf(gifts.size() / trips.size()) +
-                        "; max tour length: " + String.valueOf(longestTripLength)
+                        "Cycle " + cycleCount +
+                        " cost: " + totalCost +
+                        "; n tours: " + trips.size() +
+                        "; mean tour length: " + (gifts.size() / trips.size()) +
+                        "; max tour length: " + longestTripLength
                 );
-                new Printer().writeToHtml("solution"+String.valueOf(cycleCount)+".html", gifts, trips);
+                new Printer().writeToHtml("solution"+cycleCount+".html", gifts, trips);
                 ++cycleCount;
             }
         } catch (IOException e) {
@@ -50,7 +50,7 @@ public class Program {
     }
 
     public static List<ITrip> constructRandomSolution(List<Gift> gifts) {
-        List<ITrip> trips = new ArrayList<ITrip>(100);
+        List<ITrip> trips = new ArrayList<>(100);
         // Add first trip with id 0
         trips.add(new Trip());
         for (Gift gift : gifts) {
