@@ -27,6 +27,7 @@ public class Trip extends ArrayList<Gift> implements ITrip {
             weight += gift.getWeight();
             lastLocation = gift.getLocation();
         }
+        totalCost += weight * Constants.northPole.distanceTo(lastLocation);
         return totalCost;
     }
 
@@ -43,6 +44,7 @@ public class Trip extends ArrayList<Gift> implements ITrip {
                 lastLocation = gift.getLocation();
             }
         }
+        totalCost += weight * Constants.northPole.distanceTo(lastLocation);
         return totalCost;
     }
 
@@ -64,6 +66,7 @@ public class Trip extends ArrayList<Gift> implements ITrip {
                 lastLocation = gift.getLocation();
             }
         }
+        totalCost += weight * Constants.northPole.distanceTo(lastLocation);
         return totalCost;
     }
 
