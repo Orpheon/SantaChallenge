@@ -27,13 +27,19 @@ public class Program {
             while (true) {
                 trips = optimizer.optimize(trips);
                 totalCost = 0.0;
+                int longestTripLength = 0;
                 for (ITrip trip : trips) {
                     totalCost += trip.cost();
+                    if (trip.size() > longestTripLength) {
+                        longestTripLength = trip.size();
+                    }
                 }
                 System.out.println(
                         "Cycle " + String.valueOf(cycleCount) +
                         " cost: " + String.valueOf(totalCost) +
-                        "; n tours: " + String.valueOf(trips.size())
+                        "; n tours: " + String.valueOf(trips.size()) +
+                        "; mean tour length: " + String.valueOf(gifts.size() / trips.size()) +
+                        "; max tour length: " + String.valueOf(longestTripLength)
                 );
                 new Printer().writeToHtml("solution"+String.valueOf(cycleCount)+".html", gifts, trips);
                 ++cycleCount;
