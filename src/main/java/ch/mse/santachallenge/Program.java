@@ -1,8 +1,10 @@
 package ch.mse.santachallenge;
 
+import ch.mse.santachallenge.abstraction.ISolver;
 import ch.mse.santachallenge.abstraction.ITrip;
 import ch.mse.santachallenge.utils.CsvReader;
 import ch.mse.santachallenge.utils.Printer;
+import ch.mse.santachallenge.utils.Solution;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -14,12 +16,14 @@ public class Program {
         Printer printer = new Printer();
         try {
             List<Gift> gifts = reader.readGifts("gifts.csv");
-            List<ITrip> trips = constructRandomSolution(gifts);
+            ISolver sliceSolver = new SliceSolver();
+            var trips = sliceSolver.Solve(gifts);
+            double totalCost = Solution.totalCostOf(trips);
+            System.out.println("Total cost of slice solution: " + totalCost);
+            new Printer().writeToHtml("solution.html", gifts, trips);
 
-            double totalCost = 0.0;
-            for (ITrip trip : trips) {
-                totalCost += trip.cost();
-            }
+            trips = constructRandomSolution(gifts);
+            totalCost = Solution.totalCostOf(trips);
             System.out.println("Total cost of random solution: " + totalCost);
             new Printer().writeToHtml("random solution.html", gifts, trips);
             NaiveSimulatedAnnealing optimizer = new NaiveSimulatedAnnealing();
