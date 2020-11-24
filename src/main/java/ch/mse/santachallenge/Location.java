@@ -4,11 +4,20 @@ public class Location {
     private double longitude;
     private double latitude;
 
+    /**
+     * @param longitude in degrees
+     * @param latitude in degrees
+     */
     public Location(double longitude, double latitude) {
         this.longitude = longitude;
         this.latitude = latitude;
     }
 
+    /**
+     * 
+     * @param location the other Location
+     * @return distance in km
+     */
     public double distanceTo(Location location) {
         // distance between latitudes and longitudes
         double dLat = Math.toRadians(location.latitude - latitude);
@@ -32,15 +41,7 @@ public class Location {
         return latitude;
     }
 
-    public void setLatitude(double latitude) {
-        this.latitude = latitude;
-    }
-
     public double getLongitude() {
         return longitude;
-    }
-
-    public void setLongitude(double longitude) {
-        this.longitude = longitude;
     }
 }
