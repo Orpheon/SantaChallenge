@@ -3,7 +3,8 @@ package ch.mse.santachallenge.abstraction;
 import ch.mse.santachallenge.*;
 
 import java.util.Enumeration;
+import java.util.List;
 
 public interface ISolver {
-    Iterable<Trip> Solve(Iterable<Gift> gifts);
+    List<ITrip> Solve(Iterable<Gift> gifts);
 }
