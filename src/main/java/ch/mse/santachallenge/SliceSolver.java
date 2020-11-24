@@ -20,6 +20,7 @@ public class SliceSolver implements ISolver {
                 bestCost = cost;
             }
         }
+        Solution.assertValid(bestSolution);
         return bestSolution;
     }
 
