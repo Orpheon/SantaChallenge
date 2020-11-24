@@ -61,6 +61,7 @@ public class SliceSolver implements ISolver {
                 }
                 nextEntry = slice.higherEntry(nextEntry.getKey());
             }
+            Collections.reverse(trip);
             sliceTrips.add(trip);
             for (var gift : trip) {
                 slice.remove(gift.getLocation().getLatitude());
