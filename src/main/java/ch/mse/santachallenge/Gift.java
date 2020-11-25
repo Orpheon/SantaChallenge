@@ -22,4 +22,9 @@ public class Gift {
     public double getWeight() {
         return weight;
     }
+
+	@Override
+	public String toString() {
+		return "Gift [id=" + id + ", location=" + location + ", weight=" + weight + "]";
+	}
 }

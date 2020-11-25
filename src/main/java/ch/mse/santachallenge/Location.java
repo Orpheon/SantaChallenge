@@ -44,4 +44,9 @@ public class Location {
     public double getLongitude() {
         return longitude;
     }
+
+	@Override
+	public String toString() {
+		return "Location [longitude=" + longitude + ", latitude=" + latitude + "]";
+	}
 }
