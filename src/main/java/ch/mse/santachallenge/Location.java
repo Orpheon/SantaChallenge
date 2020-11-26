@@ -6,7 +6,7 @@ public class Location {
 
     /**
      * @param longitude in degrees
-     * @param latitude in degrees
+     * @param latitude  in degrees
      */
     public Location(double longitude, double latitude) {
         this.longitude = longitude;
@@ -28,10 +28,7 @@ public class Location {
         double lat2 = Math.toRadians(location.latitude);
 
         // apply formulae
-        double a = Math.pow(Math.sin(dLat / 2), 2) +
-                Math.pow(Math.sin(dLon / 2), 2) *
-                        Math.cos(lat1) *
-                        Math.cos(lat2);
+        double a = Math.pow(Math.sin(dLat / 2), 2) + Math.pow(Math.sin(dLon / 2), 2) * Math.cos(lat1) * Math.cos(lat2);
         double rad = 6371;
         double c = 2 * Math.asin(Math.sqrt(a));
         return rad * c;
@@ -45,8 +42,8 @@ public class Location {
         return longitude;
     }
 
-	@Override
-	public String toString() {
-		return "Location [longitude=" + longitude + ", latitude=" + latitude + "]";
-	}
+    @Override
+    public String toString() {
+        return "Location [longitude=" + longitude + ", latitude=" + latitude + "]";
+    }
 }
