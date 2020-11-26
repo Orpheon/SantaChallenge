@@ -12,8 +12,9 @@ import ch.mse.santachallenge.Gift;
  * @author Sam
  *
  */
-public class SolverRandom {
+public class SolverRandom implements Solvable {
 
+    @Override
     public LinkedList<LinkedList<Gift>> solve(LinkedList<Gift> gifts) {
         Collections.shuffle(gifts);
         LinkedList<LinkedList<Gift>> result = new LinkedList<>();
