@@ -17,16 +17,23 @@ public class Program {
         Printer printer = new Printer();
         try {
             List<Gift> gifts = reader.readGifts("gifts.csv");
-            ISolver sliceSolver = new SliceSolver();
+            ISolver solver = new SliceSolver();
             IOptimizer sliceOptimizer = new SliceOptimizer();
-            var trips = sliceSolver.Solve(gifts);
+            var trips = solver.Solve(gifts);
             double totalCost = Solution.totalCostOf(trips);
             System.out.println("Total cost of slice solution: " + totalCost);
             new Printer().writeToHtml("solution.html", gifts, trips);
+
             trips = sliceOptimizer.optimize(trips);
             totalCost = Solution.totalCostOf(trips);
             System.out.println("Total cost of slice solution after optimization: " + totalCost);
             new Printer().writeToHtml("optimizedSolution.html", gifts, trips);
+
+            solver = new OptimizedSolver();
+            trips = solver.Solve(gifts);
+            totalCost = Solution.totalCostOf(trips);
+            System.out.println("Total cost of optimized solution: " + totalCost);
+            new Printer().writeToHtml("bestSolution.html", gifts, trips);
 
             trips = constructRandomSolution(gifts);
             totalCost = Solution.totalCostOf(trips);

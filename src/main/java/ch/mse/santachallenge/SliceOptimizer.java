@@ -2,7 +2,6 @@ package ch.mse.santachallenge;
 
 import ch.mse.santachallenge.abstraction.IOptimizer;
 import ch.mse.santachallenge.abstraction.ITrip;
-
 import java.util.*;
 
 public class SliceOptimizer implements IOptimizer {
@@ -11,7 +10,8 @@ public class SliceOptimizer implements IOptimizer {
     private final Random rm = new Random();
     private double totalCost;
     private TreeMap<Double, PrecalculatedEntry> entries;
-    public List<ITrip> optimize(Iterable<ITrip> currentSolution) {
+
+    public List<ITrip> optimize(Collection<ITrip> currentSolution) {
         initEntries(currentSolution);
         var runsWithoutOptimization = 0;
         while(runsWithoutOptimization < 10000){
