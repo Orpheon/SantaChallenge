@@ -3,6 +3,7 @@ package ch.mse.santachallenge;
 import ch.mse.santachallenge.abstraction.ITrip;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.ListIterator;
 
 public class Trip extends ArrayList<Gift> implements ITrip {
@@ -15,7 +16,10 @@ public class Trip extends ArrayList<Gift> implements ITrip {
     public Trip(int id) {
         this.id = id;
     }
-
+    public Trip(Collection<Gift> gifts){
+        super(gifts);
+        this.id = id_template++;
+    }
     public double cost() {
         double totalCost = 0.0;
         double weight = Constants.sledWeight;

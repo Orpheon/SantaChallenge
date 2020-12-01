@@ -1,5 +1,6 @@
 package ch.mse.santachallenge;
 
+import ch.mse.santachallenge.abstraction.IOptimizer;
 import ch.mse.santachallenge.abstraction.ISolver;
 import ch.mse.santachallenge.abstraction.ITrip;
 import ch.mse.santachallenge.utils.CsvReader;
@@ -17,10 +18,15 @@ public class Program {
         try {
             List<Gift> gifts = reader.readGifts("gifts.csv");
             ISolver sliceSolver = new SliceSolver();
+            IOptimizer sliceOptimizer = new SliceOptimizer();
             var trips = sliceSolver.Solve(gifts);
             double totalCost = Solution.totalCostOf(trips);
             System.out.println("Total cost of slice solution: " + totalCost);
             new Printer().writeToHtml("solution.html", gifts, trips);
+            trips = sliceOptimizer.optimize(trips);
+            totalCost = Solution.totalCostOf(trips);
+            System.out.println("Total cost of slice solution after optimization: " + totalCost);
+            new Printer().writeToHtml("optimizedSolution.html", gifts, trips);
 
             trips = constructRandomSolution(gifts);
             totalCost = Solution.totalCostOf(trips);
