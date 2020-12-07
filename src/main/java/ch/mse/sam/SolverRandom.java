@@ -9,27 +9,27 @@ import java.util.LinkedList;
 import ch.mse.santachallenge.Gift;
 
 /**
+ * A solver, which creates random solution.
+ * 
  * @author Sam
  *
  */
 public class SolverRandom implements Solvable {
 
     @Override
-    public LinkedList<LinkedList<Gift>> solve(LinkedList<Gift> gifts) {
+    public SolutionSam solve(LinkedList<Gift> gifts) {
         Collections.shuffle(gifts);
-        LinkedList<LinkedList<Gift>> result = new LinkedList<>();
-        result.add(new LinkedList<>());
-        double currentTourWeight = 0;
+        SolutionSam solution = new SolutionSam();
+        int tourId = 0;
+        double currentTourWeight = 0.0;
         for (Gift gift : gifts) {
-            LinkedList<Gift> currentTour;
             if (gift.getWeight() + currentTourWeight > ProgramSam.CARGO_LIMIT) {
-                result.addFirst(new LinkedList<Gift>());
-                currentTourWeight = 0;
+                tourId++;
+                currentTourWeight = 0.0;
             }
-            currentTour = result.getFirst();
+            solution.getGiftsTour().add(new GiftTour(gift, tourId));
             currentTourWeight += gift.getWeight();
-            currentTour.add(gift);
         }
-        return result;
+        return solution;
     }
 }

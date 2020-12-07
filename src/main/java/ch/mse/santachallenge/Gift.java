@@ -23,8 +23,30 @@ public class Gift {
         return weight;
     }
 
-	@Override
-	public String toString() {
-		return "Gift [id=" + id + ", location=" + location + ", weight=" + weight + "]";
-	}
+    @Override
+    public String toString() {
+        return "Gift [id=" + id + ", location=" + location + ", weight=" + weight + "]";
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + id;
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Gift other = (Gift) obj;
+        if (id != other.id)
+            return false;
+        return true;
+    }
 }

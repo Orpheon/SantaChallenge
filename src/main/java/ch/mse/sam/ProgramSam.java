@@ -13,6 +13,9 @@ import ch.mse.santachallenge.utils.CsvReader;
 import ch.mse.santachallenge.utils.Printer;
 
 /**
+ * Main program, which is used to solve the problem with the evolutionary
+ * algorithm.
+ * 
  * @author Sam
  *
  */
@@ -24,6 +27,8 @@ public class ProgramSam {
 
     public static final Location NORTH_POLE = new Location(0, 90);
 
+    public static final double SLEIGTH_BASE_WEIGHT = 10;
+
     /**
      * @param args
      * @throws IOException
@@ -34,15 +39,12 @@ public class ProgramSam {
         // uncomment to allow all gifts
         readGifts = readGifts.subList(0, 1000);
         LinkedList<Gift> gifts = new LinkedList<>(readGifts);
-        Solvable solverRandom = new SolverRandom();
-        LinkedList<LinkedList<Gift>> solution = solverRandom.solve(gifts);
+        SolutionSam.setGifts(gifts);
+        Solvable solver = new SolverGenetic(new SolverRandom(), 100);
+//        Solvable solver = new SolverRandom();
+        SolutionSam solution = solver.solve(gifts);
         Printer printer = new Printer(2, 8);
-        LinkedList<Iterable<Gift>> tmp = new LinkedList<>();
-        for (LinkedList<Gift> linkedList : solution) {
-            tmp.add(linkedList);
-        }
-        printer.writeToHtml2("test.html", gifts, tmp);
-        boolean tourValid = Utils.isTourValid(gifts, solution);
-        System.out.println(tourValid);
+        printer.writeToHtml2("test.html", gifts, solution.getTours());
+        System.out.println("Solution is valid " + solution.isValid(true));
     }
 }

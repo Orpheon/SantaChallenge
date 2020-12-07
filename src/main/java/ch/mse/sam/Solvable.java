@@ -6,6 +6,11 @@ import ch.mse.santachallenge.Gift;
 
 public interface Solvable {
 
-    LinkedList<LinkedList<Gift>> solve(LinkedList<Gift> gifts);
-
+    /**
+     * Creates tours, that all gifts are delivered.
+     * 
+     * @param gifts the gifts to deliver
+     * @return a solution
+     */
+    SolutionSam solve(LinkedList<Gift> gifts);
 }
