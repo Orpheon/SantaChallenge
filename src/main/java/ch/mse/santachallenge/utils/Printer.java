@@ -1,5 +1,6 @@
 package ch.mse.santachallenge.utils;
 
+import java.awt.*;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -147,19 +148,56 @@ public class Printer {
         for (Gift gift : gifts) {
             writeSVGPoint(gift.getLocation(), svgWriter);
         }
+
+        printLocationRaster(svgWriter);
+
         if (tripOfGifts != null) {
             Location santasHome = new Location(0, 90);
             Location lastLocation;
             for (Iterable<Gift> trip : tripOfGifts) {
                 lastLocation = santasHome;
                 for (Gift gift : trip) {
-                    writeSVGLine(lastLocation, gift.getLocation(), svgWriter);
+                    writeSvgLine(lastLocation, gift.getLocation(), svgWriter);
                     lastLocation = gift.getLocation();
                 }
-                writeSVGLine(lastLocation, santasHome, svgWriter);
+                writeSvgLine(lastLocation, santasHome, svgWriter);
             }
         }
         svgWriter.write("</svg>");
+    }
+
+    private void printLocationRaster(BufferedWriter svgWriter) throws IOException {
+        for(var longitude = -180; longitude <= 360; longitude += 5){
+            var width = lineWidth * 5;
+            if((longitude + 180) % 30 == 0){
+                width *= 2;
+            }
+            if(longitude == 0){
+                width *= 2;
+            }
+            this.writeSvgLine(
+                    new Location(longitude, -90.0),
+                    new Location(longitude, 90.0),
+                    svgWriter,
+                    width,
+                    Color.BLACK);
+        }
+
+        for(var latitude = -90; latitude <= 90; latitude += 5){
+            var width = lineWidth * 5;
+            if((latitude + 90) % 30 == 0){
+                width *= 2;
+            }
+            if(latitude == 0){
+                width *= 2;
+            }
+            this.writeSvgLine(
+                    new Location(-180.0, latitude),
+                    new Location(180.0, latitude),
+                    svgWriter,
+                    width,
+                    Color.BLACK);
+        }
     }
 
     private void writeSVGPoint(Location location, BufferedWriter svgWriter) throws IOException {
@@ -168,11 +206,16 @@ public class Printer {
                 + "\" stroke=\"black\" stroke-width=\"1\" fill=\"black\"/>");
     }
 
-    private void writeSVGLine(Location a, Location b, BufferedWriter svgWriter) throws IOException {
+    private void writeSvgLine(Location a, Location b, BufferedWriter svgWriter) throws IOException {
+
+        writeSvgLine(a, b, svgWriter, lineWidth,  Color.RED);
+    }
+
+    private void writeSvgLine(Location a, Location b, BufferedWriter svgWriter, double lineWidth, Color color) throws IOException {
         svgWriter.write("<line x1=\"" + (int) Math.rint(a.getLongitude() * xMult + xTransform) + "\" y1=\""
                 + (int) Math.rint(a.getLatitude() * yMult + yTransform) + "\" x2=\""
                 + (int) Math.rint(b.getLongitude() * xMult + xTransform) + "\" y2=\""
-                + (int) Math.rint(b.getLatitude() * yMult + yTransform) + "\" style=\"stroke:rgb(255,0,0);stroke-width:"
+                + (int) Math.rint(b.getLatitude() * yMult + yTransform) + "\" style=\"stroke:rgb(" + color.getRed() + "," + color.getGreen() + "," + color.getBlue() + ");stroke-width:"
                 + (int) lineWidth + "\"/>");
     }
 }
