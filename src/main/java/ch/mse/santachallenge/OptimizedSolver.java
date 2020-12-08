@@ -23,13 +23,14 @@ public class OptimizedSolver implements ISolver {
         }
         solution.addAll(solver.Solve(southPole));
         solution.addAll(solver.Solve(others));
-        var optimizer = new SwapInsideTripOptimizer();
+        var optimizer1 = new SwapInsideTripOptimizer();
+        var optimizer2 = new SwapBetweenTripOptimizer();
         var iteration = 0;
         while(iteration < 10000000){
-            solution = optimizer.optimize(solution);
-            if(iteration % 1000 == 0){
-                System.out.println("Current cost: " + Solution.totalCostOf(solution));
-            }
+            solution = optimizer1.optimize(solution);
+            System.out.println("Current cost after swap inside: " + Solution.totalCostOf(solution));
+            solution = optimizer2.optimize(solution);
+            System.out.println("Current cost after swap between: " + Solution.totalCostOf(solution));
         }
         return solution;
     }
