@@ -14,4 +14,5 @@ public interface ITrip extends List<Gift> {
     double cost();
     double costSkipGift(Gift skipGift);
     double costExtraGift(Gift extraGift, int pos);
+    double avgLongitude();
 }

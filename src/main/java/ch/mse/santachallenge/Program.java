@@ -17,6 +17,11 @@ public class Program {
         Printer printer = new Printer();
         try {
             List<Gift> gifts = reader.readGifts("gifts.csv");
+            var partitioner = new EarthPartitioner();
+            var partitions = partitioner.partition(gifts);
+            new Printer().writeToHtml2("partitions.html", gifts, null, partitions);
+            var partitionSolver = new EarthPartitionSolver();
+            var solution = partitionSolver.solve(partitions);
             ISolver solver = new SliceSolver();
             IOptimizer sliceOptimizer = new SliceOptimizer();
             var trips = solver.Solve(gifts);

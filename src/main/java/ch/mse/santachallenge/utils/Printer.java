@@ -6,9 +6,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.LinkedList;
+import java.util.Random;
 
 import ch.mse.santachallenge.Gift;
 import ch.mse.santachallenge.Location;
+import ch.mse.santachallenge.Partition;
 import ch.mse.santachallenge.abstraction.ITrip;
 
 /**
@@ -19,7 +21,7 @@ import ch.mse.santachallenge.abstraction.ITrip;
  */
 public class Printer {
     private double lineWidth;
-    private double pointRadius;
+    private double giftRadius;
 
     private final double margin = 100;
     private final double xMult = 100.0;
@@ -35,6 +37,8 @@ public class Printer {
     private final double yTransform = margin - minY;
     private final int height = (int) (maxY + margin + yTransform), width = (int) (maxX + xTransform + margin);
 
+    private final Random rm = new Random();
+
     public Printer() {
         this(1, 5);
     }
@@ -48,7 +52,24 @@ public class Printer {
     public Printer(double lineWidth, double pointRadius) {
         super();
         this.lineWidth = lineWidth;
-        this.pointRadius = pointRadius;
+        this.giftRadius = pointRadius;
+    }
+
+    /**
+     * Export an instance and it's corresponding solution to a HTML file containing
+     * an SVG representing the solution.
+     *
+     * @param path  file to write to.
+     * @param gifts the gifts to draw
+     * @param trips the trips to draw
+     * @throws IOException Can throw IOExceptions
+     */
+    public void writeToHtml(String path, Iterable<Gift> gifts, Iterable<ITrip> trips) throws IOException {
+        LinkedList<Iterable<Gift>> tripOfGifts = new LinkedList<>();
+        for (ITrip iTrip : trips) {
+            tripOfGifts.add(iTrip.getDistributedGifts());
+        }
+        writeToHtml2(path, gifts, tripOfGifts);
     }
 
     /**
@@ -60,7 +81,21 @@ public class Printer {
      * @param tripOfGifts trips containing the gifts
      * @throws IOException
      */
-    public void writeToHtml2(String path, Iterable<Gift> gifts, Iterable<Iterable<Gift>> tripOfGifts)
+    public void writeToHtml2(String path, Iterable<Gift> gifts, Iterable<Iterable<Gift>> tripOfGifts) throws IOException {
+        writeToHtml2(path, gifts, tripOfGifts, null);
+    }
+
+    /**
+     * Export an instance and it's corresponding solution to a HTML file containing
+     * an SVG representing the solution.
+     *
+     * @param path        to write to.
+     * @param gifts       the gifts to draw
+     * @param tripOfGifts trips containing the gifts
+     * @param partitions all partitions
+     * @throws IOException
+     */
+    public void writeToHtml2(String path, Iterable<Gift> gifts, Iterable<Iterable<Gift>> tripOfGifts, Iterable<Partition> partitions)
             throws IOException {
         File file = new File(path).getAbsoluteFile();
         String title = "SantaChallenge";
@@ -83,70 +118,18 @@ public class Printer {
             // svgWriter.write("<p style=\"font-size:30px\">Total distance: " +
             // ((int)Math.rint(Utils.euclideanDistance2D(solution) * 10) / 10.0) + "</p>");
             htmlWriter.write("</div>");
-            writeSvg(gifts, tripOfGifts, htmlWriter);
+            writeSvg(gifts, tripOfGifts, partitions, htmlWriter);
             htmlWriter.write("</body>");
             htmlWriter.write("</html>");
         }
     }
 
-    /**
-     * Export an instance and it's corresponding solution to a HTML file containing
-     * an SVG representing the solution.
-     * 
-     * @param path  file to write to.
-     * @param gifts the gifts to draw
-     * @param trips the trips to draw
-     * @throws IOException Can throw IOExceptions
-     */
-    public void writeToHtml(String path, Iterable<Gift> gifts, Iterable<ITrip> trips) throws IOException {
-        LinkedList<Iterable<Gift>> tripOfGifts = new LinkedList<>();
-        for (ITrip iTrip : trips) {
-            tripOfGifts.add(iTrip.getDistributedGifts());
-        }
-        writeToHtml2(path, gifts, tripOfGifts);
-    }
-
-    /**
-     * Export an instance and it's corresponding solution to a HTML file containing
-     * an SVG representing the solution.
-     * 
-     * @param path        file to write to.
-     * @param gifts       the gifts to draw
-     * @param tripOfGifts the trips of gifts to draw
-     * @throws IOException
-     */
-    public void writeToSvg2(String path, Iterable<Gift> gifts, Iterable<Iterable<Gift>> tripOfGifts)
-            throws IOException {
-        File file = new File(path).getAbsoluteFile();
-        Files.createDirectories(file.toPath().getParent());
-        try (BufferedWriter svgWriter = Files.newBufferedWriter(file.toPath())) {
-            writeSvg(gifts, tripOfGifts, svgWriter);
-        }
-    }
-
-    /**
-     * Export an instance and it's corresponding solution to a HTML file containing
-     * an SVG representing the solution.
-     * 
-     * @param path  file to write to.
-     * @param gifts the gifts to draw
-     * @param trips the trips to draw
-     * @throws IOException Can throw IOExceptions
-     */
-    public void writeToSvg(String path, Iterable<Gift> gifts, Iterable<ITrip> trips) throws IOException {
-        LinkedList<Iterable<Gift>> tripOfGifts = new LinkedList<>();
-        for (ITrip iTrip : trips) {
-            tripOfGifts.add(iTrip.getDistributedGifts());
-        }
-        writeToSvg2(path, gifts, tripOfGifts);
-    }
-
-    private void writeSvg(Iterable<Gift> gifts, Iterable<Iterable<Gift>> tripOfGifts, BufferedWriter svgWriter)
+    private void writeSvg(Iterable<Gift> gifts, Iterable<Iterable<Gift>> tripOfGifts, Iterable<Partition> partitions, BufferedWriter svgWriter)
             throws IOException {
         svgWriter.write("<svg viewBox=\"0 0 " + width + " " + height
                 + "\" style=\"position:absolute; top:0; left:0; bottom:0; right:0; z-index:1;\">");
         for (Gift gift : gifts) {
-            writeSVGPoint(gift.getLocation(), svgWriter);
+            writeSVGPoint(gift.getLocation(), giftRadius, svgWriter);
         }
 
         printLocationRaster(svgWriter);
@@ -163,6 +146,16 @@ public class Printer {
                 writeSvgLine(lastLocation, santasHome, svgWriter);
             }
         }
+
+        if (partitions != null){
+            for(var partition : partitions){
+                var color = getRandomColor();
+                for(var gift : partition){
+                    writeSVGPoint(gift.getLocation(), giftRadius * 5, color, svgWriter);
+                }
+            }
+        }
+
         svgWriter.write("</svg>");
     }
 
@@ -200,10 +193,14 @@ public class Printer {
         }
     }
 
-    private void writeSVGPoint(Location location, BufferedWriter svgWriter) throws IOException {
+    private void writeSVGPoint(Location location, double pointRadius, BufferedWriter svgWriter) throws IOException {
+        writeSVGPoint(location, pointRadius, Color.BLACK, svgWriter);
+    }
+
+    private void writeSVGPoint(Location location, double pointRadius, Color color, BufferedWriter svgWriter) throws IOException {
         svgWriter.write("<circle cx=\"" + (int) Math.rint(location.getLongitude() * xMult + xTransform) + "\" cy=\""
                 + (int) Math.rint(location.getLatitude() * yMult + yTransform) + "\" r=\"" + pointRadius
-                + "\" stroke=\"black\" stroke-width=\"1\" fill=\"black\"/>");
+                + "\" stroke=\"black\" stroke-width=\"0\" fill=\" "+ getSvgColorString(color) +" \"/>");
     }
 
     private void writeSvgLine(Location a, Location b, BufferedWriter svgWriter) throws IOException {
@@ -215,7 +212,19 @@ public class Printer {
         svgWriter.write("<line x1=\"" + (int) Math.rint(a.getLongitude() * xMult + xTransform) + "\" y1=\""
                 + (int) Math.rint(a.getLatitude() * yMult + yTransform) + "\" x2=\""
                 + (int) Math.rint(b.getLongitude() * xMult + xTransform) + "\" y2=\""
-                + (int) Math.rint(b.getLatitude() * yMult + yTransform) + "\" style=\"stroke:rgb(" + color.getRed() + "," + color.getGreen() + "," + color.getBlue() + ");stroke-width:"
+                + (int) Math.rint(b.getLatitude() * yMult + yTransform) + "\" style=\"stroke:" + getSvgColorString(color) + ";stroke-width:"
                 + (int) lineWidth + "\"/>");
+    }
+
+    private String getSvgColorString(Color color) {
+        return "rgb(" + color.getRed() + "," + color.getGreen() + "," + color.getBlue() + ")";
+    }
+
+    private Color getRandomColor(){
+        float r = rm.nextFloat();
+        float g = rm.nextFloat();
+        float b = rm.nextFloat();
+        Color randomColor = new Color(r, g, b);
+        return randomColor.darker();
     }
 }

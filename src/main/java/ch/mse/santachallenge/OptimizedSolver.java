@@ -21,12 +21,25 @@ public class OptimizedSolver implements ISolver {
                 others.add(gift);
             }
         }
-        solution.addAll(solver.Solve(southPole));
-        solution.addAll(solver.Solve(others));
+        var optimizer3 = new MergeTripOptimizer();
+
+        List<ITrip> othersSolution = solver.Solve(others);
+        List<ITrip> southPoleSolution = solver.Solve(southPole);
+
+        var southPoleCost = Solution.totalCostOf(southPoleSolution);
+        var cost = southPoleCost + Solution.totalCostOf(othersSolution);
+        System.out.println("Initial cost: " + cost);
+        for (int i = 0; i < 1000; i++){
+            othersSolution = optimizer3.optimize(othersSolution);
+            cost = southPoleCost + Solution.totalCostOf(othersSolution);
+            System.out.println("Current cost after merge: " + cost);
+        }
+        solution.addAll(southPoleSolution);
+        solution.addAll(othersSolution);
         var optimizer1 = new SwapInsideTripOptimizer();
         var optimizer2 = new SwapBetweenTripOptimizer();
         var iteration = 0;
-        while(iteration < 10000000){
+        while(iteration < 10000){
             solution = optimizer1.optimize(solution);
             System.out.println("Current cost after swap inside: " + Solution.totalCostOf(solution));
             solution = optimizer2.optimize(solution);

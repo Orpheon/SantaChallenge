@@ -10,21 +10,37 @@ import java.util.Random;
 
 public class SwapInsideTripOptimizer implements IOptimizer {
     private int maxIterations = 100000;
+    private Random rm = new Random();
     @Override
     public List<ITrip> optimize(Collection<ITrip> currentSolution) {
         ArrayList<ITrip> solution = new ArrayList<>();
-        var rm = new Random();
         for(var trip : currentSolution){
             solution.add(trip);
         }
         var iteration = 0;
         while(iteration < maxIterations){
             var tripToOptimize = solution.get(rm.nextInt(solution.size()));
+            OptimizeTrip(tripToOptimize);
+            iteration++;
+        }
+        return solution;
+    }
+
+    public void OptimizeTrip(ITrip tripToOptimize) {
+        OptimizeTrip(tripToOptimize, 1);
+    }
+
+    public void OptimizeTrip(ITrip tripToOptimize, int iterations) {
+        if (tripToOptimize.size() < 2){
+            return;
+        }
+        for(int i = 0; i < iterations; i++){
             var beforeCost = tripToOptimize.cost();
-            var indexA = rm.nextInt(tripToOptimize.size());
-            var indexB = rm.nextInt(tripToOptimize.size());
-            if(indexA == indexB){
-                continue;
+            var indexA = -1;
+            var indexB = -1;
+            while(indexA == indexB){
+                indexA = rm.nextInt(tripToOptimize.size());
+                indexB = rm.nextInt(tripToOptimize.size());
             }
             var giftA = tripToOptimize.get(indexA);
             var giftB = tripToOptimize.get(indexB);
@@ -36,8 +52,6 @@ public class SwapInsideTripOptimizer implements IOptimizer {
                 tripToOptimize.set(indexA, giftA);
                 tripToOptimize.set(indexB, giftB);
             }
-            iteration++;
         }
-        return solution;
     }
 }

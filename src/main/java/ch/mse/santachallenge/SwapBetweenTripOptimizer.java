@@ -20,7 +20,7 @@ public class SwapBetweenTripOptimizer implements IOptimizer {
     public List<ITrip> optimize(Collection<ITrip> currentSolution) {
         TreeMap<Double, ITrip> solution = new TreeMap<>();
         for(var trip : currentSolution){
-            solution.put(getAvgLongitude(trip), trip);
+            solution.put(trip.avgLongitude(), trip);
         }
         solutionAsArray = new ArrayList<ITrip>(solution.values());
         spareWeights = new ArrayList<Double>(solutionAsArray.size());
@@ -71,19 +71,5 @@ public class SwapBetweenTripOptimizer implements IOptimizer {
 
     private boolean CanSwap(int indexA, int indexB, Gift giftA, Gift giftB) {
         return (giftA.getWeight() - giftB.getWeight()) < spareWeights.get(indexB) && (giftB.getWeight() - giftA.getWeight()) < spareWeights.get(indexA);
-    }
-
-    private double getAvgLongitude(ITrip trip) {
-        if (trip.size() == 0){
-            return 0.0;
-        }
-        var longitudeBase = trip.get(0).getLocation().getLongitude();
-        //The longitude base is used because -180.0 + 180.0 would result in avg 0 even tho they are at the same position
-        var longitudeAccu = 0.0;
-        for(var gift : trip){
-            longitudeAccu += longitudeBase + (gift.getLocation().getLongitude() - longitudeBase + 720.0) % 360.0;
-        }
-        var avgLongitude = longitudeAccu / trip.size();
-        return avgLongitude;
     }
 }

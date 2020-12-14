@@ -74,6 +74,22 @@ public class Trip extends ArrayList<Gift> implements ITrip {
         return totalCost;
     }
 
+    @Override
+    public double avgLongitude() {
+        if (size() == 0){
+            return 0.0;
+        }
+        var longitudeBase = get(0).getLocation().getLongitude() + 180.0;
+        //The longitude base is used because -180.0 + 180.0 would result in avg 0 even tho they are at the same position
+        var longitudeAccu = 0.0;
+        for(var gift : this){
+            var longitude = longitudeBase + ((gift.getLocation().getLongitude() - longitudeBase + 720.0) % 360.0);
+            longitudeAccu += longitude;
+        }
+        var avgLongitude = longitudeAccu / size();
+        return avgLongitude;
+    }
+
     public double totalWeight() {
         double weight = Constants.sledWeight;
         for (Gift gift : this) {
