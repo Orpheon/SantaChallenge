@@ -3,6 +3,7 @@
  */
 package ch.mse.sam;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 
@@ -19,7 +20,7 @@ public class SolverRandom implements Solvable {
     @Override
     public SolutionSam solve(LinkedList<Gift> gifts) {
         Collections.shuffle(gifts);
-        SolutionSam solution = new SolutionSam();
+        ArrayList<GiftTour> giftTours = new ArrayList<>();
         int tourId = 0;
         double currentTourWeight = 0.0;
         for (Gift gift : gifts) {
@@ -27,9 +28,9 @@ public class SolverRandom implements Solvable {
                 tourId++;
                 currentTourWeight = 0.0;
             }
-            solution.getGiftsTour().add(new GiftTour(gift, tourId));
+            giftTours.add(new GiftTour(gift, tourId));
             currentTourWeight += gift.getWeight();
         }
-        return solution;
+        return new SolutionSam(giftTours);
     }
 }

@@ -9,9 +9,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.Map.Entry;
 import java.util.Random;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
 
 import ch.mse.santachallenge.Gift;
@@ -27,43 +31,114 @@ public class SolverGenetic implements Solvable {
 
     private int numberOfSolutions;
     private Solvable startSolver;
+    private int numGenerations;
+    private double maxUsage;
+    private double probMutation;
+    private double percentKeepBest;
+    private boolean printGenerations;
+    private static boolean reorderElements;
     private static Random random = new Random();
 
-    public SolverGenetic(Solvable startSolver, int numberOfSolutions) {
+    /**
+     * Creates a new genetic solver.
+     * 
+     * @param startSolver       the solver to generate the initial solution with
+     * @param numberOfSolutions the minimal number of solutions in every generation
+     * @param numGenerations    the number of generations
+     * @param maxUsage          the percent of maximal cpu-usage desired ]0..1]
+     * @param reorderElements   specifies, if the elements should be reordered at
+     *                          every step
+     * @param probMutation      the probably of a muatation at every step
+     * @param percentKeepBest   the best x percent are kept in each generation
+     * @param printGenerations  specifies, if the fitness of every generation should
+     *                          be printed
+     */
+    public SolverGenetic(Solvable startSolver, int numberOfSolutions, int numGenerations, double maxUsage,
+            boolean reorderElements, double probMutation, double percentKeepBest, boolean printGenerations) {
         super();
         this.numberOfSolutions = numberOfSolutions;
         this.startSolver = startSolver;
+        this.numGenerations = numGenerations;
+        if (maxUsage <= 0 || maxUsage > 1) {
+            throw new IllegalArgumentException("usage has to be in range ]0..1].");
+        }
+        this.maxUsage = maxUsage;
+        this.reorderElements = reorderElements;
+        this.probMutation = probMutation;
+        this.percentKeepBest = percentKeepBest;
+        this.printGenerations = printGenerations;
     }
 
     @Override
     public SolutionSam solve(LinkedList<Gift> gifts) {
         LinkedList<SolutionSam> solutions = new LinkedList<>();
-        long lastTimeMillis = System.currentTimeMillis();
+        LinkedList<Long> executionTimes = new LinkedList<>();
+        long timeLastMillis = System.currentTimeMillis();
         // generate initial solutions
         for (int i = 0; i < numberOfSolutions; i++) {
             solutions.add(startSolver.solve(gifts));
         }
         Collections.sort(solutions);
-        // pick to 10 percent
-        for (int generation = 0; generation < 500; generation++) {
-            long currTimeMillis = System.currentTimeMillis();
-            printFitness(solutions, generation, currTimeMillis - lastTimeMillis);
-            lastTimeMillis = currTimeMillis;
-            int newGenSize = solutions.size() / 10;
+        for (int generation = 0; generation < numGenerations; generation++) {
+            long timeCurrMillis = System.currentTimeMillis();
+            long duration = timeCurrMillis - timeLastMillis;
+            executionTimes.add(duration);
+            if (printGenerations) {
+                printFitness(solutions, generation, duration);
+            }
+            timeLastMillis = timeCurrMillis;
+            int newGenSize = (int) (solutions.size() * percentKeepBest);
             List<SolutionSam> mates = solutions.subList(0, newGenSize);
-            LinkedList<SolutionSam> newGeneration = new LinkedList<>();
+            ConcurrentLinkedQueue<SolutionSam> newGeneration = new ConcurrentLinkedQueue<>();
+            int numThreads = (int) (Runtime.getRuntime().availableProcessors() * maxUsage);
+            LinkedList<MateThread> threads = new LinkedList<>();
+            for (int i = 0; i < numThreads; i++) {
+                MateThread mateThread = new MateThread(newGeneration, newGenSize, Collections.unmodifiableList(mates));
+                mateThread.start();
+                threads.add(mateThread);
+            }
+            for (MateThread mateThread : threads) {
+                try {
+                    mateThread.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            solutions = new LinkedList<>(newGeneration);
+            Collections.sort(solutions);
+        }
+        Collections.sort(executionTimes);
+        double median = executionTimes.get(executionTimes.size() / 2);
+        if (printGenerations) {
+            System.out.println("finished with median of " + median + " ms/generation");
+        }
+        return solutions.getLast();
+    }
+
+    private class MateThread extends Thread {
+
+        private ConcurrentLinkedQueue<SolutionSam> newGeneration;
+        private int newGenSize;
+        private List<SolutionSam> mates;
+
+        public MateThread(ConcurrentLinkedQueue<SolutionSam> newGeneration, int newGenSize, List<SolutionSam> mates) {
+            this.newGeneration = newGeneration;
+            this.newGenSize = newGenSize;
+            this.mates = mates;
+        }
+
+        @Override
+        public void run() {
             do {
                 LinkedList<Integer> ids = getUniqueRandomNumbers(2, newGenSize, false);
                 SolutionSam male = mates.get(ids.get(0));
                 SolutionSam female = mates.get(ids.get(1));
                 // combime them into new solutions
                 SolutionSam child = mate(male, female);
+                child.getReindeerWeariness();
                 newGeneration.add(child);
             } while (newGeneration.size() < numberOfSolutions);
-            Collections.sort(newGeneration);
-            solutions = newGeneration;
         }
-        return solutions.getLast();
     }
 
     private void printFitness(LinkedList<SolutionSam> solutions, int generation, long duration) {
@@ -88,7 +163,7 @@ public class SolverGenetic implements Solvable {
      * @param rangeEnd   the end of the range, exclusive
      * @return the child
      */
-    public static ArrayList<GiftTour> partiallyMappedCrossover(ArrayList<GiftTour> male, ArrayList<GiftTour> female,
+    public static ArrayList<GiftTour> partiallyMappedCrossover(List<GiftTour> male, List<GiftTour> female,
             int rangeStart, int rangeEnd) {
         if (rangeStart >= rangeEnd) {
             throw new IllegalArgumentException(
@@ -103,7 +178,7 @@ public class SolverGenetic implements Solvable {
         // insert range from second parent
         for (int i = rangeStart; i < rangeEnd; i++) {
             GiftTour genom = female.get(i);
-            child[i] = genom;
+            child[i] = new GiftTour(genom);
             genomsCopied.add(genom);
             mapping.put(female.get(i), male.get(i));
         }
@@ -111,7 +186,7 @@ public class SolverGenetic implements Solvable {
         Consumer<Integer> copy = (i) -> {
             GiftTour genom = male.get(i);
             if (!genomsCopied.contains(genom)) {
-                child[i] = genom;
+                child[i] = new GiftTour(genom);
                 genomsCopied.add(genom);
             } else {
                 uncopiedIndexes.add(i);
@@ -132,7 +207,7 @@ public class SolverGenetic implements Solvable {
                 gene = mapping.get(value);
                 value = gene;
             } while (genomsCopied.contains(gene));
-            child[i] = gene;
+            child[i] = new GiftTour(gene);
         }
         return new ArrayList<>(Arrays.asList(child));
     }
@@ -146,21 +221,33 @@ public class SolverGenetic implements Solvable {
      */
     private SolutionSam mate(SolutionSam male, SolutionSam female) {
         SolutionSam retVal;
-        do {
-            int numGifts = male.getGiftsTour().size();
-            LinkedList<Integer> randomNumbers = getUniqueRandomNumbers(2, numGifts, true);
-            ArrayList<GiftTour> child = partiallyMappedCrossover(male.getGiftsTour(), female.getGiftsTour(),
-                    randomNumbers.get(0), randomNumbers.get(1));
+        int numGifts = male.getGiftsTour().size();
+        LinkedList<Integer> randomNumbers = getUniqueRandomNumbers(2, numGifts, true);
+        ArrayList<GiftTour> child = partiallyMappedCrossover(male.getGiftsTour(), female.getGiftsTour(),
+                randomNumbers.get(0), randomNumbers.get(1));
+        child = mutate(numGifts, child);
+        child = fixMeee(child);
+        retVal = new SolutionSam(child);
+        return retVal;
+    }
+
+    private ArrayList<GiftTour> mutate(int numGifts, ArrayList<GiftTour> child) {
+        if (random.nextDouble() <= probMutation) {
             int numMutations = random.nextInt(3);
             LinkedList<Swap> swaps = new LinkedList<Swap>();
             for (int i = 0; i < numMutations; i++) {
                 LinkedList<Integer> pos = getUniqueRandomNumbers(2, numGifts, false);
                 swaps.add(new Swap(pos.get(0), pos.get(1)));
             }
-            child = mutate(child, swaps);
-            retVal = new SolutionSam(child);
-        } while (!retVal.isValid(false));
-        return retVal;
+            child = mutatePosition(child, swaps);
+            swaps = new LinkedList<Swap>();
+            for (int i = 0; i < numMutations; i++) {
+                LinkedList<Integer> pos = getUniqueRandomNumbers(2, numGifts, false);
+                swaps.add(new Swap(pos.get(0), pos.get(1)));
+            }
+            child = mutateTour(child, swaps);
+        }
+        return child;
     }
 
     /**
@@ -170,10 +257,26 @@ public class SolverGenetic implements Solvable {
      * @param positions the indexes to use
      * @return the mutated tour
      */
-    public static ArrayList<GiftTour> mutate(ArrayList<GiftTour> child, Collection<Swap> positions) {
+    public static ArrayList<GiftTour> mutatePosition(ArrayList<GiftTour> child, Collection<Swap> positions) {
         for (Swap swap : positions) {
             GiftTour posA = child.set(swap.getPosA(), child.get(swap.getPosB()));
             child.set(swap.getPosB(), posA);
+        }
+        return child;
+    }
+
+    /**
+     * Moves a gift from one tour to another, where it fits
+     * 
+     * @param child     the tour to mutate
+     * @param positions the gift at the position A gets the tour of the gift of the
+     *                  position B
+     * @return
+     */
+    public static ArrayList<GiftTour> mutateTour(ArrayList<GiftTour> child, Collection<Swap> positions) {
+        for (Swap swap : positions) {
+            int newTourId = child.get(swap.getPosB()).getTourId();
+            child.get(swap.getPosA()).setTourId(newTourId);
         }
         return child;
     }
@@ -203,5 +306,119 @@ public class SolverGenetic implements Solvable {
             Collections.sort(results);
         }
         return results;
+    }
+
+    /**
+     * Fixes the genom of a child.
+     * 
+     * @param child
+     * @return
+     */
+    public static ArrayList<GiftTour> fixMeee(ArrayList<GiftTour> child) {
+        // create map, which contains the tour and its weights
+        LinkedHashMap<Integer, TourWeight> toursGifts = new LinkedHashMap<>();
+        for (GiftTour giftTour : child) {
+            TourWeight tour = toursGifts.get(giftTour.getTourId());
+            if (tour == null) {
+                tour = new TourWeight();
+                toursGifts.put(giftTour.getTourId(), tour);
+            }
+            tour.add(giftTour);
+        }
+        LinkedList<Integer> keyList = new LinkedList<>(toursGifts.keySet());
+        ListIterator<Integer> it = keyList.listIterator();
+        while (it.hasNext()) {
+            Integer key = it.next();
+            // correct tour, if this is nessecary
+            while (toursGifts.get(key).getWeight() > ProgramSam.CARGO_LIMIT) {
+                TourWeight value = toursGifts.get(key);
+                // select package, which should be removed
+                LinkedList<GiftTour> tour = value.getTour();
+                GiftTour giftToRemove = tour.get(random.nextInt(tour.size()));
+                // find tour, in which this package can be inserted
+                LinkedList<Integer> possibleTours = new LinkedList<>();
+                for (Entry<Integer, TourWeight> entry2 : toursGifts.entrySet()) {
+                    if (entry2.getValue().getWeight() + giftToRemove.getWeight() < ProgramSam.CARGO_LIMIT) {
+                        possibleTours.add(entry2.getKey());
+                    }
+                }
+                int tourTarget;
+                // id no tour is found create a new one
+                if (possibleTours.isEmpty()) {
+                    int maxTour = -1;
+                    for (Integer tourId : toursGifts.keySet()) {
+                        if (tourId > maxTour) {
+                            maxTour = tourId;
+                        }
+                    }
+                    tourTarget = maxTour + 1;
+                } else {
+                    tourTarget = possibleTours.get(random.nextInt(possibleTours.size()));
+                }
+                // move gift to new tour
+                value.remove(giftToRemove);
+                TourWeight tourWeight = toursGifts.get(tourTarget);
+                if (tourWeight == null) {
+                    tourWeight = new TourWeight();
+                    toursGifts.put(tourTarget, tourWeight);
+                    it.add(key);
+                }
+                giftToRemove.setTourId(tourTarget);
+                tourWeight.add(giftToRemove);
+            }
+        }
+        ArrayList<GiftTour> curedChild = new ArrayList<>();
+        if (reorderElements) {
+            // remove gaps in the tour ids
+            int newTourId = 0;
+            for (TourWeight tw : toursGifts.values()) {
+                for (GiftTour gt : tw.getTour()) {
+                    gt.setTourId(newTourId);
+                    curedChild.add(gt);
+                }
+                newTourId++;
+            }
+        } else {
+            for (TourWeight tw : toursGifts.values()) {
+                curedChild.addAll(tw.getTour());
+            }
+        }
+        return curedChild;
+    }
+
+    private static class TourWeight {
+        private LinkedList<GiftTour> tour;
+        private Double weight;
+
+        public TourWeight() {
+            this.tour = new LinkedList<GiftTour>();
+            this.weight = 0.0;
+        }
+
+        public void add(GiftTour giftTour) {
+            if (tour == null) {
+                tour = new LinkedList<>();
+            }
+            tour.add(giftTour);
+            weight += giftTour.getWeight();
+        }
+
+        public void remove(GiftTour gt) {
+            tour.remove(gt);
+            weight -= gt.getWeight();
+        }
+
+        public LinkedList<GiftTour> getTour() {
+            return tour;
+        }
+
+        public Double getWeight() {
+            return weight;
+        }
+
+        @Override
+        public String toString() {
+            return "TourWeight [weight=" + weight + "]";
+        }
     }
 }

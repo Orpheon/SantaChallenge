@@ -31,4 +31,9 @@ public class Swap {
     public int getPosB() {
         return posB;
     }
+
+    @Override
+    public String toString() {
+        return "Swap [posA=" + posA + ", posB=" + posB + "]";
+    }
 }

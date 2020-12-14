@@ -22,6 +22,11 @@ public class GiftTour extends Gift {
         this.tourId = tourId;
     }
 
+    public GiftTour(GiftTour gt) {
+        super(gt.getId(), gt.getLocation(), gt.getWeight());
+        this.tourId = gt.getTourId();
+    }
+
     public int getTourId() {
         return tourId;
     }
@@ -32,6 +37,6 @@ public class GiftTour extends Gift {
 
     @Override
     public String toString() {
-        return "GiftTour [giftId=" + getId() + ", tour=" + tourId + "]";
+        return "GiftTour [giftId=" + getId() + ", tour=" + tourId + ", weight=" + getWeight() + "]";
     }
 }

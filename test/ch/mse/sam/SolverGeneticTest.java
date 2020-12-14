@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNotEquals;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -146,9 +147,9 @@ public class SolverGeneticTest {
      * Swaps the permutation on 1 place.
      */
     @Test
-    public void testMutate1() {
+    public void testMutatePosition1() {
         ArrayList<GiftTour> child = addNewGiftTours(new ArrayList<>(), 1, 3, 8, 2, 7, 4, 5, 6);
-        child = SolverGenetic.mutate(child, Arrays.asList(new Swap[] { new Swap(0, 1) }));
+        child = SolverGenetic.mutatePosition(child, Arrays.asList(new Swap[] { new Swap(0, 1) }));
         ArrayList<GiftTour> expected = addNewGiftTours(new ArrayList<>(), 3, 1, 8, 2, 7, 4, 5, 6);
         assertArrayEquals(expected.toArray(), child.toArray());
     }
@@ -157,10 +158,10 @@ public class SolverGeneticTest {
      * Swaps the permutation on 2 places.
      */
     @Test
-    public void testMutate2() {
+    public void testMutatePosition2() {
         ArrayList<GiftTour> child = addNewGiftTours(new ArrayList<>(), 1, 3, 8, 2, 7, 4, 5, 6);
         List<Swap> swaps = Arrays.asList(new Swap[] { new Swap(0, 1), new Swap(1, 2) });
-        child = SolverGenetic.mutate(child, swaps);
+        child = SolverGenetic.mutatePosition(child, swaps);
         ArrayList<GiftTour> expected = addNewGiftTours(new ArrayList<>(), 3, 8, 1, 2, 7, 4, 5, 6);
         assertArrayEquals(expected.toArray(), child.toArray());
     }
@@ -169,7 +170,7 @@ public class SolverGeneticTest {
      * Checks, if the swap function fails when two places are the same.
      */
     @Test
-    public void testMutateIlegal() {
+    public void testMutatePositionIlegal() {
         Exception ex = null;
         try {
             new Swap(0, 0);
@@ -224,5 +225,79 @@ public class SolverGeneticTest {
         for (Entry<Integer, Integer> entry : numCount.entrySet()) {
             assertEquals((Integer) 1, entry.getValue()); // every number has to be used once
         }
+    }
+
+    /**
+     * Tests that the mutate tour function schanges the tour of a gift.
+     */
+    @Test
+    public void testMutateTour1() {
+        ArrayList<GiftTour> child = new ArrayList<>();
+        child.add(new GiftTour(0, null, 1, 0));
+        child.add(new GiftTour(1, null, 1, 0));
+        child.add(new GiftTour(2, null, 1, 0));
+        child.add(new GiftTour(3, null, 1, 1));
+        child.add(new GiftTour(4, null, 1, 1));
+        child.add(new GiftTour(4, null, 1, 1));
+        LinkedList<Swap> swaps = new LinkedList<>();
+        swaps.add(new Swap(0, 3));
+        child = SolverGenetic.mutateTour(child, swaps);
+        assertEquals(1, child.get(0).getTourId());
+        assertEquals(1, child.get(3).getTourId());
+    }
+
+    /**
+     * tests, if a gift from a full tour is moved at another one, which still has
+     * space.
+     */
+    @Test
+    public void testFixMeee1() {
+        ArrayList<GiftTour> child = new ArrayList<>();
+        child.add(new GiftTour(0, null, 500, 0));
+        child.add(new GiftTour(1, null, 500, 0));
+        child.add(new GiftTour(2, null, 500, 0));
+        child.add(new GiftTour(3, null, 1, 1));
+        child.add(new GiftTour(4, null, 1, 1));
+        child.add(new GiftTour(5, null, 1, 1));
+        child = SolverGenetic.fixMeee(child);
+        SolutionSam.setGifts(new HashSet<>(child));
+        assertEquals(true, new SolutionSam(child).isValid(false, true));
+    }
+
+    /**
+     * tests, if multiple gifts from a full tour is moved at another one, which
+     * still has space.
+     */
+    @Test
+    public void testFixMeee2() {
+        ArrayList<GiftTour> child = new ArrayList<>();
+        child.add(new GiftTour(0, null, 500, 0));
+        child.add(new GiftTour(1, null, 500, 0));
+        child.add(new GiftTour(2, null, 500, 0));
+        child.add(new GiftTour(3, null, 500, 0));
+        child.add(new GiftTour(4, null, 1, 1));
+        child.add(new GiftTour(5, null, 1, 1));
+        child.add(new GiftTour(6, null, 1, 1));
+        child = SolverGenetic.fixMeee(child);
+        SolutionSam.setGifts(new HashSet<>(child));
+        assertEquals(true, new SolutionSam(child).isValid(false, true));
+    }
+
+    /**
+     * Tests, if a new tour is created, if there is not enough space in any other
+     * tour.
+     */
+    @Test
+    public void testFixMeee3() {
+        ArrayList<GiftTour> child = new ArrayList<>();
+        child.add(new GiftTour(0, null, 500, 0));
+        child.add(new GiftTour(1, null, 500, 0));
+        child.add(new GiftTour(2, null, 600, 0));
+        child.add(new GiftTour(4, null, 600, 0));
+        child.add(new GiftTour(5, null, 500, 1));
+        child.add(new GiftTour(6, null, 500, 1));
+        child = SolverGenetic.fixMeee(child);
+        SolutionSam.setGifts(new HashSet<>(child));
+        assertEquals(true, new SolutionSam(child).isValid(false, true));
     }
 }

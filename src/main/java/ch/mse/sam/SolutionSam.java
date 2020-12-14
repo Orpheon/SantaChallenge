@@ -3,9 +3,11 @@ package ch.mse.sam;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import ch.mse.santachallenge.Gift;
 import ch.mse.santachallenge.Location;
@@ -19,24 +21,24 @@ import ch.mse.santachallenge.Location;
  */
 public class SolutionSam implements Comparable<SolutionSam> {
 
-    private static List<Gift> gifts = new LinkedList<Gift>();
+    private static Set<Gift> gifts = new HashSet<Gift>();
 
     private ArrayList<GiftTour> giftsTour;
 
-    public SolutionSam() {
-        giftsTour = new ArrayList<>();
-    }
+    private HashMap<Integer, Double> tourWeight = null;
+
+    private Double reindeerWeariness;
 
     public SolutionSam(ArrayList<GiftTour> giftsTour) {
         this.giftsTour = giftsTour;
     }
 
-    public static void setGifts(LinkedList<Gift> g) {
-        gifts = Collections.unmodifiableList(g);
+    public static void setGifts(Set<Gift> g) {
+        gifts = Collections.unmodifiableSet(g);
     }
 
-    public ArrayList<GiftTour> getGiftsTour() {
-        return giftsTour;
+    public List<GiftTour> getGiftsTour() {
+        return Collections.unmodifiableList(giftsTour);
     }
 
     /**
@@ -45,6 +47,13 @@ public class SolutionSam implements Comparable<SolutionSam> {
      * @return
      */
     public double getReindeerWeariness() {
+        if (reindeerWeariness == null) {
+            reindeerWeariness = recalculateReindeerWeariness();
+        }
+        return reindeerWeariness;
+    }
+
+    private double recalculateReindeerWeariness() {
         HashMap<Integer, CostLocationWeight> tourIdMap = new HashMap<>();
         // traverse tours in reverse order to ease calculation
         for (int i = giftsTour.size() - 1; i >= 0; i--) {
@@ -85,21 +94,25 @@ public class SolutionSam implements Comparable<SolutionSam> {
      * <li>each gift has to be delivered exactly once</li>
      * </ul>
      * 
-     * @param printErrors if true, then the errors are printed to the standard out
+     * @param printErrors          if true, then the errors are printed to the
+     *                             standard out
+     * @param checkPackageDelivery if true, then it is checked that every package is
+     *                             delivered exactly once
      * @throws ArithmeticException if the tours are not set in this solution
      * @return true if valid else false
      */
-    public boolean isValid(boolean printErrors) {
-        if (gifts == null) {
-            throw new ArithmeticException(
-                    "The gifts have to be set in the solution that the solution can be verified.");
+    public boolean isValid(boolean printErrors, boolean checkPackageDelivery) {
+        boolean retVal = checkTourWeight(printErrors);
+        if (checkPackageDelivery) {
+            boolean packageDeliveryOk = checkPackageDelivery(printErrors);
+            retVal = retVal && packageDeliveryOk;
         }
-        boolean retVal = true;
-        HashMap<Integer, Integer> giftIdCount = new HashMap<>();
-        for (Gift gift : gifts) {
-            giftIdCount.put(gift.getId(), 0);
-        }
+        return retVal;
+    }
+
+    private boolean checkTourWeight(boolean printErrors) {
         HashMap<Integer, Double> tourWeigth = new HashMap<>();
+        boolean retVal = true;
         for (GiftTour giftTour : giftsTour) {
             int tourId = giftTour.getTourId();
             Double weigth = tourWeigth.get(tourId);
@@ -107,7 +120,6 @@ public class SolutionSam implements Comparable<SolutionSam> {
                 weigth = 0.0;
             }
             tourWeigth.put(tourId, weigth + giftTour.getWeight());
-            giftIdCount.put(giftTour.getId(), giftIdCount.get(giftTour.getId()) + 1);
         }
         // each tour has to take the cargo limit in account
         for (Entry<Integer, Double> entry : tourWeigth.entrySet()) {
@@ -118,6 +130,22 @@ public class SolutionSam implements Comparable<SolutionSam> {
                 }
                 retVal = false;
             }
+        }
+        return retVal;
+    }
+
+    private boolean checkPackageDelivery(boolean printErrors) {
+        if (gifts == null) {
+            throw new ArithmeticException(
+                    "The gifts have to be set in the solution that the solution can be verified.");
+        }
+        boolean retVal = true;
+        HashMap<Integer, Integer> giftIdCount = new HashMap<>();
+        for (Gift gift : gifts) {
+            giftIdCount.put(gift.getId(), 0);
+        }
+        for (GiftTour giftTour : giftsTour) {
+            giftIdCount.put(giftTour.getId(), giftIdCount.get(giftTour.getId()) + 1);
         }
         // each gift has to be delivered
         for (Entry<Integer, Integer> entry : giftIdCount.entrySet()) {
@@ -151,7 +179,7 @@ public class SolutionSam implements Comparable<SolutionSam> {
 
     @Override
     public String toString() {
-        return "SolutionSam [getReindeerWeariness()=" + getReindeerWeariness() + "]";
+        return "SolutionSam [fitness=" + getReindeerWeariness() + "]";
     }
 
     /**
@@ -176,5 +204,23 @@ public class SolutionSam implements Comparable<SolutionSam> {
 
     public void setGiftTour(ArrayList<GiftTour> giftsTour) {
         this.giftsTour = giftsTour;
+    }
+
+    /**
+     * @return a map containing all tours and their weights.
+     */
+    public HashMap<Integer, Double> getTourWeight() {
+        if (giftsTour == null) {
+            return null;
+        }
+        tourWeight = new HashMap<>();
+        for (GiftTour gt : giftsTour) {
+            Double weight = tourWeight.get(gt.getTourId());
+            if (weight == null) {
+                weight = 0.0;
+            }
+            tourWeight.put(gt.getTourId(), weight + gt.getWeight());
+        }
+        return tourWeight;
     }
 }
