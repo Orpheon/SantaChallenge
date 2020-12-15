@@ -6,20 +6,25 @@ public class Partition extends ArrayList<Gift> {
     private double edgeMaxLatitude = - Double.MAX_VALUE;
     private double edgeMinLatitude = Double.MAX_VALUE;
 
-    public boolean tryAdd(Gift gift, double separationWidth){
+    public boolean tryAdd(Gift gift, double separationWidth, int minCount){
         if(gift == null){
             return false;
         }
         var lastGift = size() > 0 ? get(size() - 1) : null;
-        if(lastGift == null || lastGift.getLocation().getLatitude() < gift.getLocation().getLatitude() + separationWidth){
-            this.add(gift);
-            this.edgeMinLatitude = Math.min(this.edgeMinLatitude, gift.getLocation().getLatitude());
-            this.edgeMaxLatitude = Math.max(this.edgeMaxLatitude, gift.getLocation().getLatitude());
+        if(lastGift == null || size() < minCount || lastGift.getLocation().getLatitude() < gift.getLocation().getLatitude() + separationWidth){
+            add(gift);
             return true;
         }else{
             return false;
         }
 
+    }
+
+    @Override
+    public boolean add(Gift gift) {
+        this.edgeMinLatitude = Math.min(this.edgeMinLatitude, gift.getLocation().getLatitude());
+        this.edgeMaxLatitude = Math.max(this.edgeMaxLatitude, gift.getLocation().getLatitude());
+        return super.add(gift);
     }
 
     public double getEdgeOverlapWith(Partition other){

@@ -79,11 +79,11 @@ public class Trip extends ArrayList<Gift> implements ITrip {
         if (size() == 0){
             return 0.0;
         }
-        var longitudeBase = get(0).getLocation().getLongitude() + 180.0;
+        var longitudeBase = 180.0 - get(0).getLocation().getLongitude();
         //The longitude base is used because -180.0 + 180.0 would result in avg 0 even tho they are at the same position
         var longitudeAccu = 0.0;
         for(var gift : this){
-            var longitude = longitudeBase + ((gift.getLocation().getLongitude() - longitudeBase + 720.0) % 360.0);
+            var longitude = ((gift.getLocation().getLongitude() + longitudeBase + 720.0) % 360.0) - longitudeBase;
             longitudeAccu += longitude;
         }
         var avgLongitude = longitudeAccu / size();

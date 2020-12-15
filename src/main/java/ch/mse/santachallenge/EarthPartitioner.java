@@ -3,8 +3,9 @@ package ch.mse.santachallenge;
 import java.util.*;
 
 public class EarthPartitioner {
-    private final double slizeWidth = 2.5;
-    private final double separationWidth = 10.0;
+    private final double slizeWidth = 2.0;
+    private final double separationWidth = 5.0;
+    private final int minGiftCount = 100;
     private final TreeMap<Double, Gift> unusedGifts = new TreeMap<>();
     private final List<Partition> partitions = new ArrayList<>();
     private final List<Partition> activePartitions = new ArrayList<>();
@@ -30,8 +31,17 @@ public class EarthPartitioner {
         while(!unusedGifts.isEmpty()) {
             var slice = getNextSlice(unusedGifts);
             var newPartitions = new ArrayList<Partition>();
+            Partition lastPartition = null;
             while(!slice.isEmpty()){
-                newPartitions.add(getNextPartitionOfSlice(slice));
+                var newPartition = getNextPartitionOfSlice(slice);
+                if(lastPartition != null && newPartition.size() < minGiftCount){
+                    for(var gift : newPartition){
+                        lastPartition.add(gift);
+                    }
+                }else{
+                    newPartitions.add(newPartition);
+                    lastPartition = newPartition;
+                }
             }
             var remainingNewPartitions = new ArrayList<Partition>(newPartitions);
             var overlapFound = true;
@@ -65,19 +75,11 @@ public class EarthPartitioner {
             activePartitions.addAll(nextPartitions);
             nextPartitions.clear();
         }
-        var partitionsToRemove = new ArrayList<Partition>();
-        for(var partition : partitions){
-            if(partition.size() < 5){
-                partitionsToRemove.add(partition);
-                for(var gift : partition){
-                    southPole.add(gift);
-                }
-            }
-        }
-        for(var partition : partitionsToRemove){
-            partitions.remove(partition);
-        }
         partitions.add(southPole);
+        var count = 0;
+        for(var partition : partitions){
+            count += partition.size();
+        }
         return partitions;
     }
 
@@ -109,9 +111,15 @@ public class EarthPartitioner {
         var partition = new Partition();
         Map.Entry<Double, Gift> nextEntry;
         do{
-            nextEntry = slice.pollFirstEntry();
-        }while (nextEntry != null && partition.tryAdd(nextEntry.getValue(), separationWidth));
-        return partition;
+            nextEntry = slice.firstEntry();
+            if(nextEntry == null){
+                return partition;
+            }else if(partition.tryAdd(nextEntry.getValue(), separationWidth, minGiftCount)){
+                slice.remove(nextEntry.getKey());
+            }else{
+                return partition;
+            }
+        }while (true);
     }
 
 

@@ -29,7 +29,7 @@ public class OptimizedSolver implements ISolver {
         var southPoleCost = Solution.totalCostOf(southPoleSolution);
         var cost = southPoleCost + Solution.totalCostOf(othersSolution);
         System.out.println("Initial cost: " + cost);
-        for (int i = 0; i < 1000; i++){
+        for (int i = 0; i < 100; i++){
             othersSolution = optimizer3.optimize(othersSolution);
             cost = southPoleCost + Solution.totalCostOf(othersSolution);
             System.out.println("Current cost after merge: " + cost);
